@@ -10,6 +10,7 @@ void input_unicode_hex(int, int, int, int);
 
 void ng_T(void);
 void ng_Y(void);
+void ng_Q(void);
 void ng_ST(void);
 void ng_SY(void);
 void ngh_JKQ(void);

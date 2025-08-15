@@ -163,6 +163,11 @@ void ng_T() { ng_left(1); }
 
 void ng_Y() { ng_right(1); }
 
+void ng_Q() {
+    raise_zmk_keycode_state_changed_from_encoded(ESCAPE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(ESCAPE, false, timestamp);
+}
+
 void ng_ST() {
     raise_zmk_keycode_state_changed_from_encoded(LSHIFT, true, timestamp);
     ng_left(1);
