@@ -8,5 +8,4 @@ typedef struct {
 
 void initializeListArray(NGListArray *);
 bool addToListArray(NGListArray *, NGList *);
-int includeListArray(NGListArray *, NGList *);
 bool removeFromListArrayAt(NGListArray *, int);

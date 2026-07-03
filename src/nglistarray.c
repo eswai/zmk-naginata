@@ -16,14 +16,13 @@ bool addToListArray(NGListArray *list, NGList *element) {
 
 // 集合から要素を削除する関数
 bool removeFromListArrayAt(NGListArray *list, int idx) {
-    // 要素を削除して集合を再構築
-    if (list->size > 0) {
-        for (int i = idx; i < list->size - 1; i++) {
-            list->elements[i] = list->elements[i + 1];
-        }
-        list->size--;
-        return true;
-    } else {
+    if (idx < 0 || idx >= list->size) {
         return false;
     }
+    // 要素を削除して集合を再構築
+    for (int i = idx; i < list->size - 1; i++) {
+        list->elements[i] = list->elements[i + 1];
+    }
+    list->size--;
+    return true;
 }

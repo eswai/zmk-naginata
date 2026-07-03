@@ -90,7 +90,7 @@ typedef struct {
     void (*func)(void);
 } naginata_kanamap;
 
-static naginata_kanamap ngdickana[] = {
+static const naginata_kanamap ngdickana[] = {
     // 清音
     {.shift = NONE    , .douji = B_J            , .kana = {A, NONE, NONE, NONE, NONE, NONE}, .func = nofunc }, // あ
     {.shift = NONE    , .douji = B_K            , .kana = {I, NONE, NONE, NONE, NONE, NONE}, .func = nofunc }, // い
@@ -347,6 +347,9 @@ static naginata_kanamap ngdickana[] = {
 // Helper function for counting matches/candidates
 static int count_kana_entries(NGList *keys, bool exact_match) {
   if (keys->size == 0) return 0;
+  // 変換テーブルの最大同時押しは3キー。4キー以上に一致するエントリは存在しない。
+  // 連続シフト処理でリストが4キー以上に伸びる場合があるため、ここで弾く。
+  if (keys->size > 3) return 0;
 
   int count = 0;
   uint32_t keyset0 = 0UL, keyset1 = 0UL, keyset2 = 0UL;
@@ -367,7 +370,7 @@ static int count_kana_entries(NGList *keys, bool exact_match) {
       break;
   }
 
-  for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[i]; i++) {
+  for (int i = 0; i < sizeof ngdickana / sizeof ngdickana[0]; i++) {
     bool matches = false;
 
     switch (keys->size) {
@@ -466,6 +469,13 @@ void ng_type(NGList *keys) {
         }
     }
 
+    // 1キーで一致しなかった場合、これ以上分割できない。
+    // ここで分割再帰すると同じ1キーを無限に再帰してスタックを溢れさせるため打ち切る。
+    if (keys->size <= 1) {
+        LOG_DBG("<NAGINATA NG_TYPE (no match, single key)");
+        return;
+    }
+
     // JIみたいにJIを含む同時押しはたくさんあるが、JIのみの同時押しがないとき
     // 最後の１キーを別に分けて変換する
     NGList a, b;
@@ -479,6 +489,16 @@ void ng_type(NGList *keys) {
     ng_type(&b);
 
     LOG_DBG("<NAGINATA NG_TYPE");
+}
+
+// nginputに入力を積む。満杯なら最古の入力を確定して空きを作ってから追加する。
+// (戻り値を無視して黙ってキーを捨てるのを防ぐ)
+static void push_input(NGList *e) {
+    if (!addToListArray(&nginput, e)) {
+        ng_type(&(nginput.elements[0]));
+        removeFromListArrayAt(&nginput, 0);
+        addToListArray(&nginput, e);
+    }
 }
 
 // 薙刀式の入力処理
@@ -502,7 +522,7 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
             NGList a;
             initializeList(&a);
             addToList(&a, keycode);
-            addToListArray(&nginput, &a);
+            push_input(&a);
         } else {
             NGList a;
             NGList b;
@@ -524,12 +544,12 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
                 NGList e;
                 initializeList(&e);
                 addToList(&e, keycode);
-                addToListArray(&nginput, &e);
+                push_input(&e);
             }
         }
 
         // 連続シフト
-        static uint32_t rs[10][2] = {{D, F},     {C, V}, {J, K}, {M, COMMA}, {SPACE, 0},
+        static const uint32_t rs[10][2] = {{D, F},     {C, V}, {J, K}, {M, COMMA}, {SPACE, 0},
                                      {ENTER, 0}, {F, 0}, {V, 0}, {J, 0},     {M, 0}};
 
         uint32_t keyset = 0UL;
@@ -551,8 +571,15 @@ bool naginata_press(struct zmk_behavior_binding *binding, struct zmk_behavior_bi
             }
 
             NGList l = nginput.elements[nginput.size - 1];
+            bool overflow = false;
             for (int j = 0; j < l.size; j++) {
-                addToList(&rskc, l.elements[j]);
+                if (!addToList(&rskc, l.elements[j])) {
+                    overflow = true;
+                    break;
+                }
+            }
+            if (overflow) {
+                continue;
             }
 
             if (c < 0 && ((brs & pressed_keys) == brs) && (keyset & brs) != brs && number_of_matches(&rskc) > 0) {
@@ -621,7 +648,13 @@ static int behavior_naginata_init(const struct device *dev) {
     initializeListArray(&nginput);
     pressed_keys = 0UL;
     n_pressed_keys = 0;
-    naginata_config.os =  NG_MACOS;
+#if defined(CONFIG_NAGINATA_DEFAULT_OS_WINDOWS)
+    naginata_config.os = NG_WINDOWS;
+#elif defined(CONFIG_NAGINATA_DEFAULT_OS_LINUX)
+    naginata_config.os = NG_LINUX;
+#else
+    naginata_config.os = NG_MACOS;
+#endif
 
     return 0;
 };
