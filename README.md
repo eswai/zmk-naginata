@@ -112,9 +112,13 @@ cp build/zephyr/zmk.uf2 ~/zmk_right.uf2
 ```
 
 ## 編集モードへの対応
+Windowsでは下の対応をすることによって編集モードで記号入力を行うことができます。
+* [WinCompose](https://github.com/SamHocevar/wincompose) をインストール
+* `&ng F15` を割り当てたキーを押す。60秒後に消えないように保存されます。
 
 Macでは下の対応をすることによって編集モードで記号入力を行うことができます。
 
 * Macの「Unicode 16進数入力」を入力ソースに追加する
 * Karabiner-Elementsをインストール
 * unicode_hex_input_switcher.jsonをKarabiner-Elementsで有効にする
+* `&ng F16` を割り当てたキーを押す。60秒後に消えないように保存されます。

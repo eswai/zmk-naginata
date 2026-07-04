@@ -21,4 +21,12 @@ config NAGINATA_DEFAULT_OS_LINUX
 
 endchoice
 
+config NAGINATA_PERSISTENT_STATE
+    bool "Naginata Persistent State"
+    default y
+    select SETTINGS
+    help
+      Enable persistent storage of Naginata state across reboots.
+      This feature requires CONFIG_SETTINGS to be enabled.
+
 endif # NAGINATA

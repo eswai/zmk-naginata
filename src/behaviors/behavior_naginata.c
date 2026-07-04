@@ -7,6 +7,7 @@
 #define DT_DRV_COMPAT zmk_behavior_naginata
 
 #include <zephyr/device.h>
+#include <zephyr/settings/settings.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
 
@@ -68,6 +69,33 @@ static uint32_t pressed_keys = 0UL; // 押しているキーのビットをた�
 static int8_t n_pressed_keys = 0;   // 押しているキーの数
 
 extern user_config_t naginata_config;
+
+#if IS_ENABLED(CONFIG_NAGINATA_PERSISTENT_STATE)
+static void naginata_save_work_handler(struct k_work *work) {
+    settings_save_one("naginata/state", &naginata_config, sizeof(naginata_config));
+    LOG_DBG("Saved Naginata state: %d, %d", naginata_config.os, naginata_config.tategaki);
+}
+
+static struct k_work_delayable naginata_save_work;
+
+static int naginata_settings_load_cb(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg) {
+    const char *next;
+    if (settings_name_steq(name, "state", &next) && !next) {
+        if (len != sizeof(naginata_config)) {
+            return -EINVAL;
+        }
+
+        int rc = read_cb(cb_arg, &naginata_config, sizeof(naginata_config));
+        if (rc >= 0) {
+            LOG_INF("Loaded Naginata state: %d, %d", naginata_config.os, naginata_config.tategaki);
+        }
+        return MIN(rc, 0);
+    }
+    return -ENOENT;
+}
+
+SETTINGS_STATIC_HANDLER_DEFINE(naginata, "naginata", NULL, naginata_settings_load_cb, NULL, NULL);
+#endif // IS_ENABLED(CONFIG_NAGINATA_PERSISTENT_STATE)
 
 static const uint32_t ng_key[] = {
     [A - A] = B_A,     [B - A] = B_B,         [C - A] = B_C,         [D - A] = B_D,
@@ -656,6 +684,9 @@ static int behavior_naginata_init(const struct device *dev) {
     naginata_config.os = NG_MACOS;
 #endif
 
+#if IS_ENABLED(CONFIG_NAGINATA_PERSISTENT_STATE)
+    k_work_init_delayable(&naginata_save_work, naginata_save_work_handler);
+#endif
     return 0;
 };
 
@@ -664,22 +695,38 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
     LOG_DBG("position %d keycode 0x%02X", event.position, binding->param1);
 
     // F15が押されたらnaginata_config.os=NG_WINDOWS
-    switch (binding->param1) {
-        case F15:
-            naginata_config.os = NG_WINDOWS;
-            return ZMK_BEHAVIOR_OPAQUE;
-        case F16:
-            naginata_config.os = NG_MACOS;
-            return ZMK_BEHAVIOR_OPAQUE;
-        case F17:
-            naginata_config.os = NG_LINUX;
-            return ZMK_BEHAVIOR_OPAQUE;
-        case F18:
-            naginata_config.tategaki = true;
-            return ZMK_BEHAVIOR_OPAQUE;
-        case F19:
-            naginata_config.tategaki = false;
-            return ZMK_BEHAVIOR_OPAQUE;
+    {
+#if IS_ENABLED(CONFIG_NAGINATA_PERSISTENT_STATE)
+        uint8_t saved_os = naginata_config.os;
+        bool saved_tategaki = naginata_config.tategaki;
+#endif
+        switch (binding->param1) {
+            case F15:
+                naginata_config.os = NG_WINDOWS;
+                break;
+            case F16:
+                naginata_config.os = NG_MACOS;
+                break;
+            case F17:
+                naginata_config.os = NG_LINUX;
+                break;
+            case F18:
+                naginata_config.tategaki = true;
+                break;
+            case F19:
+                naginata_config.tategaki = false;
+                break;
+        }
+        switch (binding->param1) {
+            case F15 ... F19:
+#if IS_ENABLED(CONFIG_NAGINATA_PERSISTENT_STATE)
+                if (naginata_config.os != saved_os || naginata_config.tategaki != saved_tategaki) {
+                    // Debounce saving to flash to reduce wear
+                    k_work_reschedule(&naginata_save_work, K_MSEC(CONFIG_ZMK_SETTINGS_SAVE_DEBOUNCE));
+                }
+#endif
+                return ZMK_BEHAVIOR_OPAQUE;
+        }
     }
 
     naginata_set_timestamp(event.timestamp);
