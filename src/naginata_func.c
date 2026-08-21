@@ -1,5 +1,6 @@
 
 #include <zephyr/device.h>
+#include <zephyr/kernel.h>
 #include <drivers/behavior.h>
 #include <zephyr/logging/log.h>
 
@@ -25,12 +26,12 @@ void naginata_on(void) {
 }
 
 // 薙刀式をオフ
-// void naginata_off(void) {
-//     raise_zmk_keycode_state_changed_from_encoded(LANG2, true, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(LANG2, false, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(INT5, true, timestamp);
-//     raise_zmk_keycode_state_changed_from_encoded(INT5, false, timestamp);
-// }
+void naginata_off(void) {
+    raise_zmk_keycode_state_changed_from_encoded(LANG2, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(LANG2, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(INT5, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(INT5, false, timestamp);
+}
 
 void nofunc(void) {}
 
@@ -113,10 +114,10 @@ void release_compose_key() {
     }
 }
 
-void input_unicode_hex(int n1, int n2, int n3, int n4) {
+static void input_unicode_hex_internal(int n1, int n2, int n3, int n4, bool newline) {
     switch (naginata_config.os) {
         case NG_MACOS:
-            switch_to_hex_input();
+            // switch_to_hex_input();
             press_compose_key();
             raise_zmk_keycode_state_changed_from_encoded(n1, true, timestamp);
             raise_zmk_keycode_state_changed_from_encoded(n1, false, timestamp);
@@ -131,7 +132,7 @@ void input_unicode_hex(int n1, int n2, int n3, int n4) {
             raise_zmk_keycode_state_changed_from_encoded(n4, false, timestamp);
             k_sleep(K_MSEC(10));
             release_compose_key();
-            return_to_kana_input();
+            // return_to_kana_input();
             return;
         case NG_WINDOWS:
         case NG_LINUX:
@@ -149,11 +150,21 @@ void input_unicode_hex(int n1, int n2, int n3, int n4) {
             raise_zmk_keycode_state_changed_from_encoded(n4, false, timestamp);
             k_sleep(K_MSEC(10));
             release_compose_key();
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-            raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
-            return_to_kana_input();
+            if (newline) {
+                raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
+                raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+            }
+            // return_to_kana_input();
             return;
     }
+}
+
+void input_unicode_hex(int n1, int n2, int n3, int n4) {
+    input_unicode_hex_internal(n1, n2, n3, n4, true);
+}
+
+static void input_unicode_hex_no_newline(int n1, int n2, int n3, int n4) {
+    input_unicode_hex_internal(n1, n2, n3, n4, false);
 }
 
 void ng_T() { ng_left(1); }
@@ -207,10 +218,8 @@ void ngh_JKS() { // 『{改行}
 }
 
 void ngh_JKD() { // ？{改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(SLASH), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(SLASH), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    // U+FF1F FULLWIDTH QUESTION MARK (input_unicode_hex adds Enter on Win/Linux).
+    input_unicode_hex(F, F, N1, F);
 }
 
 void ngh_JKF() { // 「{改行}
@@ -231,10 +240,8 @@ void ngh_JKX() { // 』{改行}
 }
 
 void ngh_JKC() { // ！{改行}
-    raise_zmk_keycode_state_changed_from_encoded(LS(N1), true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(LS(N1), false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    // U+FF01 FULLWIDTH EXCLAMATION MARK (input_unicode_hex adds Enter on Win/Linux).
+    input_unicode_hex(F, F, N0, N1);
 }
 
 void ngh_JKV() { // 」{改行}
@@ -332,40 +339,36 @@ void ngh_MCQ() { // ｜{改行}
 }
 
 void ngh_MCW() { // 　　　×　　　×　　　×{改行 2}
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    input_unicode_hex(N0, N0, D, N7);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
-    raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    // Keep the Unicode characters in one logical string. The compose Enter
+    // used to commit each code point is not a line break; only the final
+    // Enter below is the requested newline on Windows/Linux.
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N0, N0, D, N7);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N0, N0, D, N7);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    input_unicode_hex_no_newline(N0, N0, D, N7);
+    if (naginata_config.os != NG_MACOS) {
+        raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
+        raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
+    }
 }
 
 void ngh_MCE() { // {Home}{→}{End}{Del 2}{←}
     ng_home();
-    ng_prev_row();
+    ng_right(1);
     ng_end();
     raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    ng_next_row();
+    ng_left(1);
 }
 
 void ngh_MCR() { // {Home}{改行}{Space 1}{←}
@@ -374,7 +377,7 @@ void ngh_MCR() { // {Home}{改行}{Space 1}{←}
     raise_zmk_keycode_state_changed_from_encoded(ENTER, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    ng_next_row();
+    ng_left(1);
 }
 
 void ngh_MCT() { // ○{改行}
@@ -391,7 +394,7 @@ void ngh_MCS() { // 【{改行}
 
 void ngh_MCD() { // {Home}{→}{End}{Del 4}{←}
     ng_home();
-    ng_prev_row();
+    ng_right(1);
     ng_end();
     raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
@@ -401,7 +404,7 @@ void ngh_MCD() { // {Home}{→}{End}{Del 4}{←}
     raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(DELETE, false, timestamp);
-    ng_next_row();
+    ng_left(1);
 }
 
 void ngh_MCF() { // {Home}{改行}{Space 3}{←}
@@ -414,7 +417,7 @@ void ngh_MCF() { // {Home}{改行}{Space 3}{←}
     raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
     raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
-    ng_next_row();
+    ng_left(1);
 }
 
 void ngh_MCG() { // {Space 3}
@@ -567,7 +570,9 @@ void ng_paste() {
         break;
     case NG_MACOS:
         raise_zmk_keycode_state_changed_from_encoded(LG(V), true, timestamp);
+        k_sleep(K_MSEC(100));
         raise_zmk_keycode_state_changed_from_encoded(LG(V), false, timestamp);
+        k_sleep(K_MSEC(100));
         break;
     }
 }

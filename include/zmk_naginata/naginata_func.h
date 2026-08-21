@@ -2,9 +2,9 @@
 #include <zmk_naginata/naginata_config.h>
 
 void naginata_on(void);
+void naginata_off(void);
 void naginata_set_timestamp(int64_t ts);
 int64_t naginata_get_timestamp(void);
-// void naginata_off(void);
 void nofunc(void);
 void switch_to_hex_input(void);
 void return_to_kana_input(void);

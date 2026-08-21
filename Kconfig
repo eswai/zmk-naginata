@@ -29,4 +29,12 @@ config NAGINATA_PERSISTENT_STATE
       Enable persistent storage of Naginata state across reboots.
       This feature requires CONFIG_SETTINGS to be enabled.
 
+config NAGINATA_MIN_OVERLAP_MS
+    int "Minimum overlap time for simultaneous keys (ms)"
+    default 50
+    range 0 1000
+    help
+      Treat two character keys whose overlap is shorter than this value as
+      separate keystrokes. Set to 0 to retain the legacy overlap behavior.
+
 endif # NAGINATA
