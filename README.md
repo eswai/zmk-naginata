@@ -118,7 +118,7 @@ Windowsでは下の対応をすることによって編集モードで記号入�
 
 Macでは下の対応をすることによって編集モードで記号入力を行うことができます。
 
-* Macの「Unicode 16進数入力」を入力ソースに追加する
-* Karabiner-Elementsをインストール
-* unicode_hex_input_switcher.jsonをKarabiner-Elementsで有効にする
-* `&ng F16` を割り当てたキーを押す。60秒後に消えないように保存されます。
+* [Ishizuki](https://github.com/eswai/Ishizuki)をインストールして起動する
+* システム設定でIshizukiにアクセシビリティ権限を許可する
+* Ishizukiの入力スタイルを「macOS標準風」に設定する
+* `&ng F16` を割り当てたキーを押し、薙刀式のOS設定をmacOSにする
