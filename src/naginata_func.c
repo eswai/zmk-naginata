@@ -342,17 +342,26 @@ void ngh_MCW() { // 　　　×　　　×　　　×{改行 2}
     // Keep the Unicode characters in one logical string. The compose Enter
     // used to commit each code point is not a line break; only the final
     // Enter below is the requested newline on Windows/Linux.
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex_no_newline(N0, N0, D, N7);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex_no_newline(N0, N0, D, N7);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
-    input_unicode_hex_no_newline(N3, N0, N0, N0);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, true, timestamp);
+    raise_zmk_keycode_state_changed_from_encoded(SPACE, false, timestamp);
     input_unicode_hex_no_newline(N0, N0, D, N7);
     if (naginata_config.os != NG_MACOS) {
         raise_zmk_keycode_state_changed_from_encoded(ENTER, true, timestamp);
